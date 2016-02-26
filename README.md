@@ -109,21 +109,24 @@ A null-transport dont need for an server. We need also only define methods for t
 
 The send-packet function simply pushes the packet to request slot in null-transport class. The recv-packet function pops the request, checks it, applies it to the stored object and returns the result. Now we can test our framework:
 
+```lisp
 CL-USER> (setf fs (make-instance 'file-server :filename "test.txt"))
 #<a FILE-SERVER>
 CL-USER> (setf tp (make-instance 'null-transport :object fs))
 #<a NULL-TRANSPORT>
 CL-USER> (setf stub (make-instance 'fs-stub :transport tp))
 #<a FS-STUB>
-
+```
 On calling the method read-file with variable fs as its first argument, the regular implementation of this method will be called. But if we call it with variable stub, the call will be transferred to the real object through the null-transport in variable tp:
 
+```lisp
 CL-USER> (read-file fs 4)
 (4 . "text")
 CL-USER> (setf temp (read-file stub 4))
 #<bytecompiled-closure #<bytecompiled-function 0000000003c18eb0>>
 CL-USER> (funcall temp)
 (4 . "text")
+```
 
 As you can see, it gives the same result with real object and with the asynchronous interface on stub object. 
 
@@ -224,6 +227,7 @@ We define also a method to start our server in a new thread, this server uses th
 
 Now we can test our asynchronous RPC framework based on threads, for the first we initialize all required objects:
 
+```lisp
 CL-USER> (setf fs (make-instance 'file-server :filename "test.txt"))
 #<a FILE-SERVER>
 CL-USER> (setf tps (make-instance 'transport-mt-server))
@@ -232,15 +236,18 @@ CL-USER> (setf tpc (make-instance 'transport-mt-client :server tps))
 #<a TRANSPORT-MT-CLIENT>
 CL-USER> (setf stub (make-instance 'fs-stub :transport tpc))
 #<a FS-STUB>
+```
 
 The usage is simple: start the server and use the stub object instead of the real object.
 
+```lisp
 CL-USER> (start-rpc-server tps fs)
 #<process "RPC/MT Server for #<a FILE-SERVER>">
 CL-USER> (setf temp (read-file stub 4))
 #<bytecompiled-closure #<bytecompiled-function 000000000236ba34>>
 CL-USER> (funcall temp)
 (4 . "text")
+```
 
 Because of splitting the RPC functionality and transportation of call information, you can use the same objects with different communication mediums.
 
